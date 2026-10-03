@@ -1,0 +1,11 @@
+FROM maven:3.9.9-eclipse-temurin-21 as builder
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B -X
+COPY src ./src
+RUN mvn clean package
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=builder ./app/target/kafka-spring-producer-1.0-SNAPSHOT.jar ./app.jar
+CMD ["java","-jar","app.jar"]
