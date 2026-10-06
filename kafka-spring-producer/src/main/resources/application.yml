@@ -2,7 +2,6 @@ spring:
   kafka:
     producer:
       client-id: kafka-client-group
-      auto-offset-reset: earliest
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 logging:

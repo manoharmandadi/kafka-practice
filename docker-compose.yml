@@ -6,32 +6,38 @@ services:
       - kafka-cont
     environment:
       KAFKA_HOST: kafka-cont:29092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-cont:29092
+#      SPRING_KAFKA_PRODUCER_CLIENT_ID: kafka-client-groups
     ports:
       - "8080:8080"
     networks:
       - backend-net
-#  kafka-practice-client:
-#    image: kafka-practice-client:latest
-#    container_name: kafka-practice-client-dock-cont
-#    networks:
-#      - backend-net
-#    depends_on:
-#      - kafka
+  kafka-practice-client:
+    image: kafka-practice-client:latest
+    container_name: kafka-practice-client-dock-cont
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka-cont:29092
+    networks:
+      - backend-net
+    depends_on:
+      - kafka-cont
   kafka-cont:
     image: apache/kafka:4.2.0
     container_name: kafka-cont
     environment:
       # Configure KRaft mode (No ZooKeeper required)
+      KAFKA_NUM_PARTITIONS: 3
       KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka-cont:29093'
-
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-cont:29093
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       # Configure Listeners for internal Docker communication and external host communication
-      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,EXTERNAL://0.0.0.0:9092'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka-cont:29092,EXTERNAL://localhost:9092'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT'
-
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-cont:29092,EXTERNAL://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       # Setup log directories and cluster ID
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
     ports:
